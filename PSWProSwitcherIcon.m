@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SBAppContextHostView.h>
 #import <CaptainHook/CaptainHook.h>
 
 #import "PSWViewController.h"
@@ -20,7 +21,7 @@ CHMethod0(void, SBApplicationIcon, launch)
 }
 
 CHMethod0(void, PSWProSwitcherIcon, launch)
-{
+{	
 	if (!isUninstalled) {
 		PSWViewController *vc = [PSWViewController sharedInstance];
 		if (!vc.isAnimating)

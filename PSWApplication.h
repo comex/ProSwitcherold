@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SBIcon.h>
 
 #ifdef USE_IOSURFACE
 #import <IOSurface/IOSurface.h>

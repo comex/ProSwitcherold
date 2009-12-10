@@ -1,11 +1,18 @@
 #import "PSWSnapshotView.h"
 
 #import <SpringBoard/SpringBoard.h>
+#import <CaptainHook/CaptainHook.h>
+#import <SpringBoard/SBIcon.h>
+#import <QuartzCore/QuartzCore.h>
+#import <CoreGraphics/CoreGraphics.h>
 
 #import "PSWApplication.h"
 #import "PSWResources.h"
 
 #define kSwipeThreshold 40.0f
+
+CHDeclareClass(SBIcon);
+CHDeclareClass(SBAppContextHostView);
 
 @implementation PSWSnapshotView
 
@@ -109,7 +116,8 @@
 		[screen setClipsToBounds:YES];
 		CALayer *layer = [screen layer];
 		[layer setContents:(id)snapshot];
-		
+		screen.hidden = NO;
+				
 		[screen addTarget:self action:@selector(snapshot:touchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 		[screen addTarget:self action:@selector(snapshot:didStartDrag:) forControlEvents:UIControlEventTouchDown];
 		[screen addTarget:self action:@selector(snapshot:didDrag:) forControlEvents:UIControlEventTouchDragInside | UIControlEventTouchDragOutside];
@@ -232,3 +240,9 @@
 }
 
 @end
+
+CHConstructor
+{
+	CHLoadLateClass(SBIcon);
+	CHLoadLateClass(SBAppContextHostView);
+}

@@ -27,20 +27,33 @@
 		
 		_scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, frame.size.width, frame.size.height)];
 		[self setClipsToBounds:NO];
-		//[_scrollView setPagingEnabled:YES];
-		[_scrollView setContentSize:CGSizeMake((frame.size.width - 100.0f) * numberOfPages + 1.0f, frame.size.height)];
+		
+		/*
+		 There is a reason we are being so hacky here. We want to use paging, as supplied by UIScrollView, but, that forces each page to
+		 be the full size of the UIScrollView itself. Not good. Originally, we had a custom paging implementation here, but I think my 
+		 way works better.
+		 
+		 The way I do this is I hack UIScrollView by setting it to have a larger frame, then setting the bounds smaller and telling it to
+		 *not* clip to its bounds: making the pages to the left and right show up. Since the bounds are smaller, paging works as expected,
+		 but as we don't clip to the bounds, the other pages are still displayed.
+		 
+		 Not the nicest way to do things, but sometimes (way too often) hacking UIKit is the only method besides reimplementing the view
+		 yourself, which never comes out quite as good as you would hope :(.
+		 */
+		[_scrollView setClipsToBounds:NO];
+		[_scrollView setBounds:CGRectMake(50.0f, 0.0f, frame.size.width - 100.0f, frame.size.height)];
+		
+		[_scrollView setPagingEnabled:YES];
+		[_scrollView setContentSize:CGSizeMake((frame.size.width - 100.0f) * (numberOfPages + 1) + 1.0f, frame.size.height)];
 		[_scrollView setShowsHorizontalScrollIndicator:NO];
 		[_scrollView setShowsVerticalScrollIndicator:NO];
 		[_scrollView setScrollsToTop:NO];
 		[_scrollView setDelegate:self];
 		[_scrollView setBackgroundColor:[UIColor clearColor]];
-		_edgeInsets.left = 50.0f;
-		_edgeInsets.right = 50.0f;
-		[_scrollView setContentInset:_edgeInsets];
-		[_scrollView setContentOffset:CGPointMake(_edgeInsets.left, _edgeInsets.top)];
+		[_scrollView setContentOffset:CGPointMake(0, 0)];
 
 		_snapshotViews = [[NSMutableArray alloc] init];
-		CGFloat availableWidth = frame.size.width - _edgeInsets.left - _edgeInsets.right;
+		CGFloat availableWidth = frame.size.width - 100.0f;
 		CGRect pageFrame;
 		pageFrame.origin.x = 0.0f;
 		pageFrame.origin.y = 0.0f;
@@ -133,41 +146,17 @@
 
 #pragma mark UIScrollViewDelegate
 
-- (void)snapToPageWithContentOffset:(CGPoint)contentOffset
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    CGFloat pageWidth = (_scrollView.bounds.size.width - _edgeInsets.left - _edgeInsets.right);
-    NSInteger page = floor((contentOffset.x - _edgeInsets.left) / pageWidth) + 1.0f;
-	if (page < 0)
-		page = 0;
-	else {
-		NSInteger lastPage = _applications.count - 1;
-		if (page > lastPage)
-			page = lastPage;
-	}
-	CGFloat desiredOffset = pageWidth * page - _edgeInsets.left;
-	if (contentOffset.x != desiredOffset) {
-		contentOffset.x = desiredOffset;
-		[_scrollView setContentOffset:contentOffset animated:YES];
-	}
+	CGFloat pageWidth = [scrollView bounds].size.width;
+	NSInteger page = floor(([scrollView contentOffset].x - pageWidth / 2) / pageWidth) + 1.0f;
+	
 	if ([_pageControl currentPage] != page) {
 		[_pageControl setCurrentPage:page];
 		if ([_delegate respondsToSelector:@selector(snapshotPageView:didFocusApplication:)])
-			[_delegate snapshotPageView:self didFocusApplication:[self focusedApplication]];		
+			[_delegate snapshotPageView:self didFocusApplication:[self focusedApplication]];
 	}
 }
-
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
-{
-	[self snapToPageWithContentOffset:[_scrollView contentOffset]];
-}
-
-- (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView
-{
-	CGPoint contentOffset = [_scrollView contentOffset];
-	contentOffset.x += CHIvar(_scrollView, _horizontalVelocity, double);
-	[self snapToPageWithContentOffset:contentOffset];
-}
-
 
 #pragma mark PSWSnapshotViewDelegate
 
