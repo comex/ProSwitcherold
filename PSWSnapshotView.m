@@ -101,14 +101,25 @@ CHDeclareClass(SBAppContextHostView);
 		self.opaque = NO;
 		
 		CGImageRef snapshot = [application snapshot];
-		NSInteger snapshotWidth = CGImageGetWidth(snapshot);
-		NSInteger snapshotHeight = CGImageGetHeight(snapshot);
+		CGFloat snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
+		CGFloat snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
 		
-		imageViewX = (frame.size.width - 200) / 2.0f;
-		CGFloat imageViewW = frame.size.width - (imageViewX * 2);
-		CGFloat scaleFactor = imageViewW / snapshotWidth;
-		imageViewH = snapshotHeight * scaleFactor;
-		imageViewY = (frame.size.height - imageViewH) / 2;
+		CGSize box = CGSizeMake(frame.size.width - 30, frame.size.height - 70);
+		CGSize img = CGSizeMake(snapshotWidth, snapshotHeight);
+		
+		CGFloat ratioW = box.width  / img.width ;
+		CGFloat ratioH = box.height / img.height;
+
+		if (ratioW < ratioH) {
+			imageViewW = ratioW * snapshotWidth;
+			imageViewH = ratioW * snapshotHeight;
+		} else {
+			imageViewW = ratioH * snapshotWidth;
+			imageViewH = ratioH * snapshotHeight;
+		}
+		
+		imageViewY = (frame.size.height - imageViewH) / 2.0f;
+		imageViewX = (frame.size.width - imageViewW) / 2.0f;
 		
 		// Add Snapshot layer
 		screen = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -139,6 +150,35 @@ CHDeclareClass(SBAppContextHostView);
 
 #pragma mark Properties
 
+- (void)setFrame:(CGRect) frame
+{
+	[super setFrame:frame];
+	
+	CGImageRef snapshot = [_application snapshot];
+	CGFloat snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
+	CGFloat snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
+	
+	CGSize box = CGSizeMake(frame.size.width - 30, frame.size.height - 70);
+	CGSize img = CGSizeMake(snapshotWidth, snapshotHeight);
+	
+	CGFloat ratioW = box.width  / img.width ;
+	CGFloat ratioH = box.height / img.height;
+	
+	if (ratioW < ratioH) {
+		imageViewW = ratioW * snapshotWidth;
+		imageViewH = ratioW * snapshotHeight;
+	} else {
+		imageViewW = ratioH * snapshotWidth;
+		imageViewH = ratioH * snapshotHeight;
+	}
+	
+	imageViewY = (frame.size.height - imageViewH) / 2.0f;
+	imageViewX = (frame.size.width - imageViewW) / 2.0f;
+	
+	
+	[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
+}
+
 - (void)_closeButtonWasPushed
 {
 	if ([_delegate respondsToSelector:@selector(snapshotViewClosed:)])
@@ -150,19 +190,26 @@ CHDeclareClass(SBAppContextHostView);
 	return _closeButton != nil;
 }
 
+- (void)_positionCloseButton
+{
+	UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");
+	CGSize closeImageSize = [closeImage size];
+	CGFloat offsetX = (NSInteger)(closeImageSize.width / 2.0f);
+	CGFloat offsetY = (NSInteger)(closeImageSize.height / 2.0f);
+	[_closeButton setFrame:CGRectMake(imageViewX - offsetX, imageViewY - offsetY, closeImageSize.width, closeImageSize.height)];	
+}
+
 - (void)setShowsCloseButton:(BOOL)showsCloseButton
 {
 	if (showsCloseButton) {
 		if (!_closeButton) {
 			_closeButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
 			UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");
-			CGSize closeImageSize = [closeImage size];
-			CGFloat offsetX = (NSInteger)(closeImageSize.width / 2.0f);
-			CGFloat offsetY = (NSInteger)(closeImageSize.height / 2.0f);
-			[_closeButton setFrame:CGRectMake(imageViewX - offsetX, imageViewY - offsetY, closeImageSize.width, closeImageSize.height)];
 			[_closeButton setBackgroundImage:closeImage forState:UIControlStateNormal];
 			[_closeButton addTarget:self action:@selector(_closeButtonWasPushed) forControlEvents:UIControlEventTouchUpInside];
+			[self _positionCloseButton];
 			[self addSubview:_closeButton];
+			NSLog(@"Added close button");
 		}
 	} else {
 		if (_closeButton) {
@@ -187,6 +234,7 @@ CHDeclareClass(SBAppContextHostView);
 			CGRect frame = screen.frame;
 			frame.origin.y = imageViewY;
 			screen.frame = frame;
+			[self _positionCloseButton];
 			
 			// Prepare to add label and icon
 			CGRect bounds = [self bounds];

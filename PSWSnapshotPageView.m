@@ -51,11 +51,8 @@
 	[_scrollView setBounds:CGRectMake(0.0f, 0.0f, pageWidth, frame.size.height)];
 	[_scrollView setContentSize:CGSizeMake((pageWidth * pageCount) + 1.0f, frame.size.height)];
 	
-	NSLog(@"_scrollView.frame: %@", NSStringFromCGRect(_scrollView.frame));
-	NSLog(@"_scrollView.contentSize: %@", NSStringFromCGSize(_scrollView.contentSize));
-	
 	for (int i = 0; i < pageCount; i++) {
-		PSWSnapshotView *view;
+		PSWSnapshotView *view = nil;
 		if ([_snapshotViews count] <= i)
 		{
 			PSWSnapshotView *view = [[PSWSnapshotView alloc] initWithFrame:pageFrame application:[_applications objectAtIndex:i]];
@@ -70,8 +67,6 @@
 			[view setFrame:pageFrame];
 		}
 		
-		NSLog(@"pageWidth: %f", pageWidth);
-		NSLog(@"pageFrame: %@", NSStringFromCGRect(pageFrame));
 		pageFrame.origin.x += pageWidth;
 	}
 	

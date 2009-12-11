@@ -27,6 +27,7 @@
 	CGFloat imageViewX;
 	CGFloat imageViewY;
 	CGFloat imageViewH;
+	CGFloat imageViewW;
 }
 - (id)initWithFrame:(CGRect)frame application:(PSWApplication *)application;
 

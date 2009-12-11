@@ -31,6 +31,7 @@ static NSInteger suppressIconScatter;
 #define GetPreference(name, type) type ## ForKeyWithDefault(preferences, @#name, name)
 
 // Defaults
+#define PSWSnapshotInset		40.0f
 #define PSWShowDock             YES
 #define PSWAnimateActive        YES
 #define PSWDimBackground        YES
@@ -178,13 +179,13 @@ static NSInteger suppressIconScatter;
 	else
 		[[snapshotPageView layer] setContents:nil];
 	
+	snapshotPageView.snapshotInset       = GetPreference(PSWSnapshotInset, float);
 	snapshotPageView.allowsSwipeToClose  = GetPreference(PSWSwipeToClose, BOOL);
 	snapshotPageView.showsTitles         = GetPreference(PSWShowApplicationTitle, BOOL);
 	snapshotPageView.showsCloseButtons   = GetPreference(PSWShowCloseButton, BOOL);
 	snapshotPageView.emptyText           = GetPreference(PSWShowEmptyText, BOOL) ? @"No Apps Running":nil;
 	snapshotPageView.roundedCornerRadius = GetPreference(PSWRoundedCornerRadius, float);
 	snapshotPageView.tapsToActivate      = GetPreference(PSWTapsToActivate, NSInteger);
-	snapshotPageView.snapshotInset       = 40.0f;
 }
 
 - (void)_reloadPreferences
