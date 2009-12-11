@@ -39,47 +39,39 @@
 	}
 }
 
-/*
- There is a reason we are being so hacky here. We want to use paging, as supplied by UIScrollView, but, that forces each page to
- be the full size of the UIScrollView itself. Not good. Originally, we had a custom paging implementation here, but I think my 
- way works better.
- 
- The way I do this is I hack UIScrollView by setting it to have a larger frame, then setting the bounds smaller and telling it to
- *not* clip to its bounds: making the pages to the left and right show up. Since the bounds are smaller, paging works as expected,
- but as we don't clip to the bounds, the other pages are still displayed.
- 
- Not the nicest way to do things, but sometimes (way too often) hacking UIKit is the only method besides reimplementing the view
- yourself, which never comes out quite as good as you would hope :(.
- */
-
 - (void)_layoutViews
 {
 	CGRect frame = self.frame;
 	CGFloat pageWidth = frame.size.width - (_snapshotInset * 2);
-	NSLog(@"pageWidth: %f", pageWidth);
+	CGRect pageFrame = CGRectMake(0.0f, 0.0f, pageWidth, frame.size.height);
 	NSInteger pageCount = [_applications count];
-	[_pageControl setNumberOfPages:pageCount];
 	
+	[_pageControl setNumberOfPages:pageCount];
 	[_scrollView setFrame:CGRectMake(_snapshotInset, 0.0f, pageWidth, frame.size.height)];
+	[_scrollView setBounds:CGRectMake(0.0f, 0.0f, pageWidth, frame.size.height)];
 	[_scrollView setContentSize:CGSizeMake((pageWidth * pageCount) + 1.0f, frame.size.height)];
 	
-	NSLog(@"frame: %@", NSStringFromCGRect(_scrollView.frame));
-	NSLog(@"content size: %@", NSStringFromCGSize(_scrollView.contentSize));
+	NSLog(@"_scrollView.frame: %@", NSStringFromCGRect(_scrollView.frame));
+	NSLog(@"_scrollView.contentSize: %@", NSStringFromCGSize(_scrollView.contentSize));
 	
-	CGRect pageFrame = CGRectMake(0.0f, 0.0f, pageWidth, frame.size.height);
 	for (int i = 0; i < pageCount; i++) {
+		PSWSnapshotView *view;
 		if ([_snapshotViews count] <= i)
 		{
-			PSWSnapshotView *snapshot = [[PSWSnapshotView alloc] initWithFrame:pageFrame application:[_applications objectAtIndex:i]];
-			snapshot.delegate = self;
-			[_scrollView addSubview:snapshot];
-			[_snapshotViews addObject:snapshot];
-			[snapshot release];
+			PSWSnapshotView *view = [[PSWSnapshotView alloc] initWithFrame:pageFrame application:[_applications objectAtIndex:i]];
+			view.delegate = self;
+			[_scrollView addSubview:view];
+			[_snapshotViews addObject:view];
+			[view release];
+		}
+		else
+		{
+			view = [_snapshotViews objectAtIndex:i];
+			[view setFrame:pageFrame];
 		}
 		
-		PSWSnapshotView *view = [_snapshotViews objectAtIndex:i];
-		[view setFrame:pageFrame];
-		NSLog(@"snapshot frame: %@", NSStringFromCGRect(pageFrame));
+		NSLog(@"pageWidth: %f", pageWidth);
+		NSLog(@"pageFrame: %@", NSStringFromCGRect(pageFrame));
 		pageFrame.origin.x += pageWidth;
 	}
 	
@@ -105,7 +97,7 @@
 		[_pageControl setUserInteractionEnabled:NO];
 		[self addSubview:_pageControl];
 		
-		_scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, frame.size.width, frame.size.height)];
+		_scrollView = [[UIScrollView alloc] initWithFrame:CGRectZero];
 		[_scrollView setClipsToBounds:NO];
 		[_scrollView setPagingEnabled:YES];
 		[_scrollView setContentSize:CGSizeZero];
@@ -150,7 +142,7 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-	CGFloat pageWidth = [scrollView bounds].size.width;
+	CGFloat pageWidth = scrollView.frame.size.width;
 	NSInteger page = floor(([scrollView contentOffset].x - pageWidth / 2) / pageWidth) + 1.0f;
 	
 	if ([_pageControl currentPage] != page) {
@@ -302,7 +294,6 @@
 	if (![_applications containsObject:application]) {
 		[_applications addObject:application];
 		CGRect frame = [_scrollView bounds];
-		frame.size.width -= _snapshotInset;
 		PSWSnapshotView *snapshot = [[PSWSnapshotView alloc] initWithFrame:frame application:application];
 		snapshot.delegate = self;
 		snapshot.showsTitle = _showsTitles;
