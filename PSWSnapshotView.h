@@ -15,6 +15,8 @@
 	PSWApplication *_application;
 	id<PSWSnapshotViewDelegate> _delegate;
 	BOOL _allowsSwipeToClose;
+	BOOL _showsCloseButton;
+	BOOL _showsTitle;
 	UIButton *_closeButton;
 	UILabel *_titleView;
 	UIImageView *_iconView;

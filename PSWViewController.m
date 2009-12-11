@@ -5,6 +5,8 @@
 #import <SpringBoard/SBIconModel.h>
 #import <CaptainHook/CaptainHook.h>
 
+#define SPRINGBOARD_ACTIVE 0
+
 #import "PSWDisplayStacks.h"
 #import "PSWResources.h"
 
@@ -54,7 +56,15 @@ static NSInteger suppressIconScatter;
 - (void)didFinishDeactivate
 {
 	[[UIApplication sharedApplication] setStatusBarStyle:formerStatusBarStyle animated:NO];
-	[[self view] removeFromSuperview];
+	
+	if (!SPRINGBOARD_ACTIVE)
+	{
+		UIWindow *superview = [[self view] superview];
+		[[self view] removeFromSuperview];
+		[superview release];
+	}
+	else
+		[[self view] removeFromSuperview];
 	isAnimating = NO;
 }
 
@@ -80,16 +90,30 @@ static NSInteger suppressIconScatter;
 
 		snapshotPageView.focusedApplication = focusedApplication;
 		UIView *view = [self view];
-		UIWindow *rootWindow = [CHSharedInstance(SBUIController) window];
-		[rootWindow addSubview:view];
-		// Find appropriate superview and add as subview
-		UIView *buttonBar = [CHSharedInstance(SBIconModel) buttonBar];
-		UIView *buttonBarParent = [buttonBar superview];
-		UIView *superview = [buttonBarParent superview];
-		if (GetPreference(PSWShowDock, BOOL))
-			[superview insertSubview:view belowSubview:buttonBarParent];
+		
+		if (SPRINGBOARD_ACTIVE)
+		{
+			UIWindow *rootWindow = [CHSharedInstance(SBUIController) window];
+			[rootWindow addSubview:view];
+			
+			// Find appropriate superview and add as subview
+			UIView *buttonBar = [CHSharedInstance(SBIconModel) buttonBar];
+			UIView *buttonBarParent = [buttonBar superview];
+			UIView *superview = [buttonBarParent superview];
+			if (GetPreference(PSWShowDock, BOOL))
+				[superview insertSubview:view belowSubview:buttonBarParent];
+			else
+				[superview insertSubview:view aboveSubview:buttonBarParent];
+		}
 		else
-			[superview insertSubview:view aboveSubview:buttonBarParent];
+		{
+			NSLog(@"Window time");
+			UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+			[window setWindowLevel:1];
+			[window makeKeyAndVisible];
+			[window addSubview:view];
+		}
+		
 		if (animated) {
 			view.alpha = 0.0f;
 			CALayer *layer = [snapshotPageView.scrollView layer];
@@ -111,7 +135,13 @@ static NSInteger suppressIconScatter;
 		[focusedApplication release];
 		focusedApplication = [snapshotPageView.focusedApplication retain];
 		UIView *view = [self view];
-		SBIconListPageControl *pageControl = CHIvar(CHSharedInstance(SBIconController), _pageControl, SBIconListPageControl *);
+		
+		SBIconListPageControl *pageControl;
+		if (SPRINGBOARD_ACTIVE)
+			pageControl = CHIvar(CHSharedInstance(SBIconController), _pageControl, SBIconListPageControl *);
+		else
+			pageControl = nil;
+		
 		if (animated) {
 			CALayer *layer = [snapshotPageView.scrollView layer];
 			[layer setTransform:CATransform3DIdentity];
@@ -199,7 +229,7 @@ static NSInteger suppressIconScatter;
 {
 	UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 20.0f, 320.0f, 460.0f)];
 	
-	snapshotPageView = [[PSWSnapshotPageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 320.0f, 370.0f) applicationController:[PSWApplicationController sharedInstance]];
+	snapshotPageView = [[PSWSnapshotPageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 320.0f, (GetPreference(PSWShowDock, BOOL) && SPRINGBOARD_ACTIVE) ? 370.0f : 460.0f) applicationController:[PSWApplicationController sharedInstance]];
 	[snapshotPageView setDelegate:self];
 	[view addSubview:snapshotPageView];
 	
@@ -226,7 +256,9 @@ static NSInteger suppressIconScatter;
 
 - (void)snapshotPageView:(PSWSnapshotPageView *)snapshotPageView didCloseApplication:(PSWApplication *)application
 {
+	suppressIconScatter++;
 	[application exit];
+	suppressIconScatter--;
 }
 
 - (void)snapshotPageViewShouldExit:(PSWSnapshotPageView *)snapshotPageView

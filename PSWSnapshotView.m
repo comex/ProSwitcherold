@@ -92,6 +92,94 @@ CHDeclareClass(SBAppContextHostView);
 	}
 }
 
+- (void)_layoutView
+{
+	BOOL closeButtonNeedsReposition = NO;
+	CGImageRef snapshot = [_application snapshot];
+	CGFloat snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
+	CGFloat snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
+	
+	CGRect frame = [self frame];
+	CGSize box = CGSizeMake(frame.size.width - 30, frame.size.height - 70);
+	CGSize img = CGSizeMake(snapshotWidth, snapshotHeight);
+	
+	CGFloat ratioW = box.width  / img.width ;
+	CGFloat ratioH = box.height / img.height;
+	
+	if (ratioW < ratioH) {
+		imageViewW = ratioW * snapshotWidth;
+		imageViewH = ratioW * snapshotHeight;
+	} else {
+		imageViewW = ratioH * snapshotWidth;
+		imageViewH = ratioH * snapshotHeight;
+	}
+	
+	imageViewY = (frame.size.height - imageViewH) / 2.0f;
+	imageViewX = (frame.size.width - imageViewW) / 2.0f;
+	
+	[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
+		
+	if (_showsTitle && !_titleView) {
+		// Move it all up a bit to make room
+		imageViewY -= 20;
+		CGRect frame = screen.frame;
+		frame.origin.y = imageViewY;
+		screen.frame = frame;
+		closeButtonNeedsReposition = YES;
+		
+		// Prepare to add label and icon
+		CGRect bounds = [self bounds];
+		CGFloat center = bounds.size.width / 2.0f;
+		UIFont *titleFont = [UIFont boldSystemFontOfSize:17.0f];
+		NSString *appTitle = [_application displayName];
+		CGSize metrics = [appTitle sizeWithFont:titleFont];
+		CGFloat baseX = (NSInteger)(center - (metrics.width / 2.0f));
+		
+		// Add label
+		_titleView = [[UILabel alloc] initWithFrame:CGRectMake(baseX + 18, imageViewY + imageViewH + 10, 200, 30)];
+		_titleView.font = titleFont;
+		_titleView.backgroundColor = [UIColor clearColor];
+		_titleView.textColor = [UIColor whiteColor]; 
+		_titleView.text = appTitle;
+		[self addSubview:_titleView];
+		
+		// Add small icon
+		UIImage *smallIcon = [_application.springBoardIcon smallIcon];
+		_iconView = [[UIImageView alloc] initWithFrame:CGRectMake(baseX - 18, imageViewY + imageViewH + 13, 24, 24)];
+		[_iconView setImage:smallIcon];
+		[self addSubview:_iconView];
+	} else if (_titleView && !_showsTitle) {
+		[_titleView removeFromSuperview];
+		[_titleView release];
+		_titleView = nil;
+		[_iconView removeFromSuperview];
+		[_iconView release];
+		_iconView = nil;
+	}
+	
+	if (!_closeButton && _showsCloseButton) {
+		_closeButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+		closeButtonNeedsReposition = YES;
+		UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");
+		[_closeButton setBackgroundImage:closeImage forState:UIControlStateNormal];
+		[_closeButton addTarget:self action:@selector(_closeButtonWasPushed) forControlEvents:UIControlEventTouchUpInside];
+		[self addSubview:_closeButton];
+	} else if (_closeButton && !_showsCloseButton) {
+		[_closeButton removeFromSuperview];
+		[_closeButton release];
+		_closeButton = nil;
+	}
+	
+	if (closeButtonNeedsReposition && _closeButton)
+	{
+		UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");
+		CGSize closeImageSize = [closeImage size];
+		CGFloat offsetX = (NSInteger)(closeImageSize.width / 2.0f);
+		CGFloat offsetY = (NSInteger)(closeImageSize.height / 2.0f);
+		[_closeButton setFrame:CGRectMake(imageViewX - offsetX, imageViewY - offsetY, closeImageSize.width, closeImageSize.height)];
+	}
+}
+
 - (id)initWithFrame:(CGRect)frame application:(PSWApplication *)application
 {
     if (self = [super initWithFrame:frame]) {
@@ -99,31 +187,10 @@ CHDeclareClass(SBAppContextHostView);
 		_application.delegate = self;
 		self.userInteractionEnabled = YES;
 		self.opaque = NO;
-		
-		CGImageRef snapshot = [application snapshot];
-		CGFloat snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
-		CGFloat snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
-		
-		CGSize box = CGSizeMake(frame.size.width - 30, frame.size.height - 70);
-		CGSize img = CGSizeMake(snapshotWidth, snapshotHeight);
-		
-		CGFloat ratioW = box.width  / img.width ;
-		CGFloat ratioH = box.height / img.height;
-
-		if (ratioW < ratioH) {
-			imageViewW = ratioW * snapshotWidth;
-			imageViewH = ratioW * snapshotHeight;
-		} else {
-			imageViewW = ratioH * snapshotWidth;
-			imageViewH = ratioH * snapshotHeight;
-		}
-		
-		imageViewY = (frame.size.height - imageViewH) / 2.0f;
-		imageViewX = (frame.size.width - imageViewW) / 2.0f;
-		
+				
 		// Add Snapshot layer
 		screen = [UIButton buttonWithType:UIButtonTypeCustom];
-		[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
+		CGImageRef snapshot = [application snapshot];
 		[screen setClipsToBounds:YES];
 		CALayer *layer = [screen layer];
 		[layer setContents:(id)snapshot];
@@ -134,6 +201,8 @@ CHDeclareClass(SBAppContextHostView);
 		[screen addTarget:self action:@selector(snapshot:didDrag:) forControlEvents:UIControlEventTouchDragInside | UIControlEventTouchDragOutside];
 		[screen addTarget:self action:@selector(snapshot:didEndDrag:) forControlEvents:UIControlEventTouchCancel | UIControlEventTouchDragExit | UIControlEventTouchUpOutside | UIControlEventTouchUpInside];
 		[self addSubview:screen];
+		
+		[self _layoutView];
 	}
     return self;
 }
@@ -153,30 +222,7 @@ CHDeclareClass(SBAppContextHostView);
 - (void)setFrame:(CGRect) frame
 {
 	[super setFrame:frame];
-	
-	CGImageRef snapshot = [_application snapshot];
-	CGFloat snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
-	CGFloat snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
-	
-	CGSize box = CGSizeMake(frame.size.width - 30, frame.size.height - 70);
-	CGSize img = CGSizeMake(snapshotWidth, snapshotHeight);
-	
-	CGFloat ratioW = box.width  / img.width ;
-	CGFloat ratioH = box.height / img.height;
-	
-	if (ratioW < ratioH) {
-		imageViewW = ratioW * snapshotWidth;
-		imageViewH = ratioW * snapshotHeight;
-	} else {
-		imageViewW = ratioH * snapshotWidth;
-		imageViewH = ratioH * snapshotHeight;
-	}
-	
-	imageViewY = (frame.size.height - imageViewH) / 2.0f;
-	imageViewX = (frame.size.width - imageViewW) / 2.0f;
-	
-	
-	[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
+	[self _layoutView];
 }
 
 - (void)_closeButtonWasPushed
@@ -190,34 +236,10 @@ CHDeclareClass(SBAppContextHostView);
 	return _closeButton != nil;
 }
 
-- (void)_positionCloseButton
-{
-	UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");
-	CGSize closeImageSize = [closeImage size];
-	CGFloat offsetX = (NSInteger)(closeImageSize.width / 2.0f);
-	CGFloat offsetY = (NSInteger)(closeImageSize.height / 2.0f);
-	[_closeButton setFrame:CGRectMake(imageViewX - offsetX, imageViewY - offsetY, closeImageSize.width, closeImageSize.height)];	
-}
-
 - (void)setShowsCloseButton:(BOOL)showsCloseButton
 {
-	if (showsCloseButton) {
-		if (!_closeButton) {
-			_closeButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
-			UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");
-			[_closeButton setBackgroundImage:closeImage forState:UIControlStateNormal];
-			[_closeButton addTarget:self action:@selector(_closeButtonWasPushed) forControlEvents:UIControlEventTouchUpInside];
-			[self _positionCloseButton];
-			[self addSubview:_closeButton];
-			NSLog(@"Added close button");
-		}
-	} else {
-		if (_closeButton) {
-			[_closeButton removeFromSuperview];
-			[_closeButton release];
-			_closeButton = nil;
-		}
-	}
+	_showsCloseButton = showsCloseButton;
+	[self _layoutView];
 }
 
 - (BOOL)showsTitle
@@ -227,47 +249,8 @@ CHDeclareClass(SBAppContextHostView);
 
 - (void)setShowsTitle:(BOOL)showsTitle
 {
-	if (showsTitle) {
-		if (!_titleView) {
-			// Move it all up a bit to make room
-			imageViewY -= 20;
-			CGRect frame = screen.frame;
-			frame.origin.y = imageViewY;
-			screen.frame = frame;
-			[self _positionCloseButton];
-			
-			// Prepare to add label and icon
-			CGRect bounds = [self bounds];
-			CGFloat center = bounds.size.width / 2.0f;
-			UIFont *titleFont = [UIFont boldSystemFontOfSize:17.0f];
-			NSString *appTitle = [_application displayName];
-			CGSize metrics = [appTitle sizeWithFont:titleFont];
-			CGFloat baseX = (NSInteger)(center - (metrics.width / 2.0f));
-	
-			// Add label
-			_titleView = [[UILabel alloc] initWithFrame:CGRectMake(baseX + 18, imageViewY + imageViewH + 10, 200, 30)];
-			_titleView.font = titleFont;
-			_titleView.backgroundColor = [UIColor clearColor];
-			_titleView.textColor = [UIColor whiteColor]; 
-			_titleView.text = appTitle;
-			[self addSubview:_titleView];
-	
-			// Add small icon
-			UIImage *smallIcon = [_application.springBoardIcon smallIcon];
-			_iconView = [[UIImageView alloc] initWithFrame:CGRectMake(baseX - 18, imageViewY + imageViewH + 13, 24, 24)];
-			[_iconView setImage:smallIcon];
-			[self addSubview:_iconView];
-		}
-	} else {
-		if (_titleView) {
-			[_titleView removeFromSuperview];
-			[_titleView release];
-			_titleView = nil;
-			[_iconView removeFromSuperview];
-			[_iconView release];
-			_iconView = nil;
-		}
-	}
+	_showsTitle = showsTitle;
+	[self _layoutView];
 }
 
 - (void)setRoundedCornerRadius:(CGFloat)roundedCornerRadius
