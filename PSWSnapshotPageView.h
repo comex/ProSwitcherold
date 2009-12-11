@@ -20,8 +20,8 @@
 	BOOL _showsCloseButtons;
 	BOOL _allowsSwipeToClose;
 	CGFloat _roundedCornerRadius;
+	CGFloat _snapshotInset;
 	NSInteger _tapsToActivate;
-	UIEdgeInsets _edgeInsets;
 }
 
 - (id)initWithFrame:(CGRect)frame applicationController:(PSWApplicationController *)applicationController;
@@ -37,6 +37,7 @@
 @property (nonatomic, assign) BOOL showsCloseButtons;
 @property (nonatomic, assign) BOOL allowsSwipeToClose;
 @property (nonatomic, assign) CGFloat roundedCornerRadius;
+@property (nonatomic, assign) CGFloat snapshotInset;
 @property (nonatomic, assign) NSInteger tapsToActivate;
 
 - (NSInteger)indexOfApplication:(PSWApplication *)application;

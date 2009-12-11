@@ -7,92 +7,6 @@
 @synthesize scrollView = _scrollView;
 @synthesize tapsToActivate = _tapsToActivate;
 
-#pragma mark Public Methods
-
-- (id)initWithFrame:(CGRect)frame applicationController:(PSWApplicationController *)applicationController;
-{
-	if ((self = [super initWithFrame:frame]))
-	{
-		_applicationController = [applicationController retain];
-		[applicationController setDelegate:self];
-		_applications = [[applicationController activeApplications] mutableCopy];
-		NSUInteger numberOfPages = [_applications count];
-		
-		_pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake(0, frame.size.height - 27.0f, frame.size.width, 27.0f)];
-		[_pageControl setNumberOfPages:numberOfPages];
-		[_pageControl setCurrentPage:0];
-		[_pageControl setHidesForSinglePage:YES];
-		[_pageControl setUserInteractionEnabled:NO];
-		[self addSubview:_pageControl];
-		
-		_scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, frame.size.width, frame.size.height)];
-		[self setClipsToBounds:NO];
-		
-		/*
-		 There is a reason we are being so hacky here. We want to use paging, as supplied by UIScrollView, but, that forces each page to
-		 be the full size of the UIScrollView itself. Not good. Originally, we had a custom paging implementation here, but I think my 
-		 way works better.
-		 
-		 The way I do this is I hack UIScrollView by setting it to have a larger frame, then setting the bounds smaller and telling it to
-		 *not* clip to its bounds: making the pages to the left and right show up. Since the bounds are smaller, paging works as expected,
-		 but as we don't clip to the bounds, the other pages are still displayed.
-		 
-		 Not the nicest way to do things, but sometimes (way too often) hacking UIKit is the only method besides reimplementing the view
-		 yourself, which never comes out quite as good as you would hope :(.
-		 */
-		[_scrollView setClipsToBounds:NO];
-		[_scrollView setBounds:CGRectMake(50.0f, 0.0f, frame.size.width - 100.0f, frame.size.height)];
-		
-		[_scrollView setPagingEnabled:YES];
-		[_scrollView setContentSize:CGSizeMake((frame.size.width - 100.0f) * (numberOfPages + 1) + 1.0f, frame.size.height)];
-		[_scrollView setShowsHorizontalScrollIndicator:NO];
-		[_scrollView setShowsVerticalScrollIndicator:NO];
-		[_scrollView setScrollsToTop:NO];
-		[_scrollView setDelegate:self];
-		[_scrollView setBackgroundColor:[UIColor clearColor]];
-		[_scrollView setContentOffset:CGPointMake(0, 0)];
-
-		_snapshotViews = [[NSMutableArray alloc] init];
-		CGFloat availableWidth = frame.size.width - 100.0f;
-		CGRect pageFrame;
-		pageFrame.origin.x = 0.0f;
-		pageFrame.origin.y = 0.0f;
-		pageFrame.size.height = frame.size.height;
-		pageFrame.size.width = availableWidth;
-		for (int i = 0; i < numberOfPages; i++) {
-			PSWSnapshotView *snapshot = [[PSWSnapshotView alloc] initWithFrame:pageFrame application:[_applications objectAtIndex:i]];
-			snapshot.delegate = self;
-			[_scrollView addSubview:snapshot];
-			[_snapshotViews addObject:snapshot];
-			[snapshot release];
-			pageFrame.origin.x += availableWidth;
-		}
-		[self addSubview:_scrollView];
-
-		[self setBackgroundColor:[UIColor clearColor]];
-		[self setClipsToBounds:NO];
-		
-	}
-	return self;
-}
-
-- (void)dealloc
-{
-	[_applicationController setDelegate:nil];
-	[_applicationController release];
-	[_emptyText release];
-	[_emptyLabel release];
-	[_scrollView release];
-	[_pageControl release];
-	[_snapshotViews release];
-	[_applications release];
-	[super dealloc];
-}
-
-- (NSArray *)snapshotViews
-{
-	return [[_snapshotViews copy] autorelease];
-}
 
 #pragma mark Private Methods
 
@@ -125,23 +39,111 @@
 	}
 }
 
-- (void)_relayoutViews
+/*
+ There is a reason we are being so hacky here. We want to use paging, as supplied by UIScrollView, but, that forces each page to
+ be the full size of the UIScrollView itself. Not good. Originally, we had a custom paging implementation here, but I think my 
+ way works better.
+ 
+ The way I do this is I hack UIScrollView by setting it to have a larger frame, then setting the bounds smaller and telling it to
+ *not* clip to its bounds: making the pages to the left and right show up. Since the bounds are smaller, paging works as expected,
+ but as we don't clip to the bounds, the other pages are still displayed.
+ 
+ Not the nicest way to do things, but sometimes (way too often) hacking UIKit is the only method besides reimplementing the view
+ yourself, which never comes out quite as good as you would hope :(.
+ */
+
+- (void)_layoutViews
 {
-	NSInteger newCount = [_applications count];
-	[_pageControl setNumberOfPages:newCount];
-	CGRect bounds = [_scrollView bounds];
-	CGFloat availableWidth = bounds.size.width - _edgeInsets.left - _edgeInsets.right;
-	[_scrollView setContentSize:CGSizeMake(availableWidth * newCount + 1.0f, bounds.size.height)];
-	CGRect pageFrame;
-	pageFrame.origin.x = 0.0f;
-	pageFrame.origin.y = 0.0f;
-	pageFrame.size.height = bounds.size.height;
-	pageFrame.size.width = availableWidth;
-	for (PSWSnapshotView *view in _snapshotViews) {
+	CGRect frame = self.frame;
+	CGFloat pageWidth = frame.size.width - (_snapshotInset * 2);
+	NSLog(@"pageWidth: %f", pageWidth);
+	NSInteger pageCount = [_applications count];
+	[_pageControl setNumberOfPages:pageCount];
+	
+	[_scrollView setFrame:CGRectMake(_snapshotInset, 0.0f, pageWidth, frame.size.height)];
+	[_scrollView setContentSize:CGSizeMake((pageWidth * pageCount) + 1.0f, frame.size.height)];
+	
+	NSLog(@"frame: %@", NSStringFromCGRect(_scrollView.frame));
+	NSLog(@"content size: %@", NSStringFromCGSize(_scrollView.contentSize));
+	
+	CGRect pageFrame = CGRectMake(0.0f, 0.0f, pageWidth, frame.size.height);
+	for (int i = 0; i < pageCount; i++) {
+		if ([_snapshotViews count] <= i)
+		{
+			PSWSnapshotView *snapshot = [[PSWSnapshotView alloc] initWithFrame:pageFrame application:[_applications objectAtIndex:i]];
+			snapshot.delegate = self;
+			[_scrollView addSubview:snapshot];
+			[_snapshotViews addObject:snapshot];
+			[snapshot release];
+		}
+		
+		PSWSnapshotView *view = [_snapshotViews objectAtIndex:i];
 		[view setFrame:pageFrame];
-		pageFrame.origin.x += availableWidth;
+		NSLog(@"snapshot frame: %@", NSStringFromCGRect(pageFrame));
+		pageFrame.origin.x += pageWidth;
 	}
+	
 	[self _applyEmptyText];
+}
+
+
+#pragma mark Public Methods
+
+- (id)initWithFrame:(CGRect)frame applicationController:(PSWApplicationController *)applicationController;
+{
+	if ((self = [super initWithFrame:frame]))
+	{
+		_applicationController = [applicationController retain];
+		[applicationController setDelegate:self];
+		_applications = [[applicationController activeApplications] mutableCopy];
+		NSUInteger numberOfPages = [_applications count];
+		
+		_pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake(0, frame.size.height - 27.0f, frame.size.width, 27.0f)];
+		[_pageControl setNumberOfPages:numberOfPages];
+		[_pageControl setCurrentPage:0];
+		[_pageControl setHidesForSinglePage:YES];
+		[_pageControl setUserInteractionEnabled:NO];
+		[self addSubview:_pageControl];
+		
+		_scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, frame.size.width, frame.size.height)];
+		[_scrollView setClipsToBounds:NO];
+		[_scrollView setPagingEnabled:YES];
+		[_scrollView setContentSize:CGSizeZero];
+		[_scrollView setShowsHorizontalScrollIndicator:NO];
+		[_scrollView setShowsVerticalScrollIndicator:NO];
+		[_scrollView setScrollsToTop:NO];
+		[_scrollView setDelegate:self];
+		[_scrollView setBackgroundColor:[UIColor clearColor]];
+		[_scrollView setContentOffset:CGPointZero];
+		[self addSubview:_scrollView];
+
+		_snapshotViews = [[NSMutableArray alloc] init];
+		
+		[self setBackgroundColor:[UIColor clearColor]];
+		[self setClipsToBounds:NO];
+		
+		[self _layoutViews];
+		
+	}
+	return self;
+}
+
+- (void)dealloc
+{
+	[_applicationController setDelegate:nil];
+	[_applicationController release];
+	[_emptyText release];
+	[_emptyLabel release];
+	[_scrollView release];
+	[_pageControl release];
+	[_snapshotViews release];
+	[_applications release];
+	[super dealloc];
+}
+
+- (NSArray *)snapshotViews
+{
+	return [[_snapshotViews copy] autorelease];
 }
 
 #pragma mark UIScrollViewDelegate
@@ -200,7 +202,7 @@
 	NSInteger index = [self indexOfApplication:application];
 	if (index != NSNotFound && index != [_pageControl currentPage]) {
 		[_pageControl setCurrentPage:index];
-		[_scrollView setContentOffset:CGPointMake((_scrollView.bounds.size.width - _edgeInsets.left - _edgeInsets.right) * index, 0.0f) animated:animated];
+		[_scrollView setContentOffset:CGPointMake(_scrollView.bounds.size.width * index, 0.0f) animated:animated];
 		if ([_delegate respondsToSelector:@selector(snapshotPageView:didFocusApplication:)])
 			[_delegate snapshotPageView:self didFocusApplication:application];
 	}
@@ -273,6 +275,20 @@
 	}
 }
 
+- (CGFloat)snapshotInset
+{
+	return _snapshotInset;
+}
+
+-(void)setSnapshotInset:(CGFloat)snapshotInset
+{
+	if (_snapshotInset != snapshotInset) {
+		_snapshotInset = snapshotInset;
+
+		[self _layoutViews];
+	}
+}
+
 - (NSInteger)indexOfApplication:(PSWApplication *)application
 {
 	return [_applications indexOfObject:application];
@@ -286,7 +302,7 @@
 	if (![_applications containsObject:application]) {
 		[_applications addObject:application];
 		CGRect frame = [_scrollView bounds];
-		frame.size.width -= _edgeInsets.left + _edgeInsets.right;
+		frame.size.width -= _snapshotInset;
 		PSWSnapshotView *snapshot = [[PSWSnapshotView alloc] initWithFrame:frame application:application];
 		snapshot.delegate = self;
 		snapshot.showsTitle = _showsTitles;
@@ -296,7 +312,7 @@
 		[_scrollView addSubview:snapshot];
 		[_snapshotViews addObject:snapshot];
 		[snapshot release];
-		[self _relayoutViews];
+		[self _layoutViews];
 	}
 }
 
@@ -322,7 +338,7 @@
 		frame.origin.y -= frame.size.height;
 		snapshot.frame = frame;
 		snapshot.alpha = 0.0f;
-		[self _relayoutViews];
+		[self _layoutViews];
 		[UIView commitAnimations];
 	}
 }

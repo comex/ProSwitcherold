@@ -184,6 +184,7 @@ static NSInteger suppressIconScatter;
 	snapshotPageView.emptyText           = GetPreference(PSWShowEmptyText, BOOL) ? @"No Apps Running":nil;
 	snapshotPageView.roundedCornerRadius = GetPreference(PSWRoundedCornerRadius, float);
 	snapshotPageView.tapsToActivate      = GetPreference(PSWTapsToActivate, NSInteger);
+	snapshotPageView.snapshotInset       = 40.0f;
 }
 
 - (void)_reloadPreferences
