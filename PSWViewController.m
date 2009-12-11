@@ -5,7 +5,7 @@
 #import <SpringBoard/SBIconModel.h>
 #import <CaptainHook/CaptainHook.h>
 
-#define SPRINGBOARD_ACTIVE 0
+#define SPRINGBOARD_ACTIVE 1
 
 #import "PSWDisplayStacks.h"
 #import "PSWResources.h"
