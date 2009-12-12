@@ -54,7 +54,7 @@ CHMethod2(void, SBIconController, scrollToIconListAtIndex, NSInteger, index, ani
 		CHSuper2(SBIconController, scrollToIconListAtIndex, index, animate, animate);
 }
 
-// FIXME: use libactivator
+/* FIXME: use libactivator
 CHMethod0(BOOL, SpringBoard, allowMenuDoubleTap)
 {
     return YES;
@@ -71,7 +71,7 @@ CHMethod0(void, SpringBoard, handleMenuDoubleTap)
 	
     CHSuper0(SpringBoard, handleMenuDoubleTap);
 }
-// end fixme
+// end fixme */
 
 
 CHConstructor {
@@ -86,6 +86,6 @@ CHConstructor {
 	CHLoadLateClass(SBIconController);
 	CHHook2(SBIconController, scrollToIconListAtIndex, animate);
 	
-	CHHook0(SpringBoard, allowMenuDoubleTap);
-	CHHook0(SpringBoard, handleMenuDoubleTap);
+	//CHHook0(SpringBoard, allowMenuDoubleTap);
+	//CHHook0(SpringBoard, handleMenuDoubleTap);
 }
