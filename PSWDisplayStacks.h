@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBDisplayStack.h>
+#import <CaptainHook/CaptainHook.h>
 
 SBDisplayStack *PSWGetDisplayStack(NSInteger index);
 
