@@ -117,17 +117,11 @@ CHDeclareClass(SBAppContextHostView);
 	imageViewY = (frame.size.height - imageViewH) / 2.0f;
 	imageViewX = (frame.size.width - imageViewW) / 2.0f;
 	
+	if (_showsTitle)
+		imageViewY -= 20;
+	
 	[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
 		
-	if (_showsTitle)
-	{
-		// Move it all up a bit to make room
-		imageViewY -= 20;
-		CGRect screenFrame = screen.frame;
-		screenFrame.origin.y = imageViewY;
-		screen.frame = screenFrame;	
-	}
-	
 	if (_showsTitle && !_titleView) {
 		closeButtonNeedsReposition = YES;
 		

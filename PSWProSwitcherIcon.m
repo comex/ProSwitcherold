@@ -54,6 +54,26 @@ CHMethod2(void, SBIconController, scrollToIconListAtIndex, NSInteger, index, ani
 		CHSuper2(SBIconController, scrollToIconListAtIndex, index, animate, animate);
 }
 
+// FIXME: use libactivator
+CHMethod0(BOOL, SpringBoard, allowMenuDoubleTap)
+{
+    return YES;
+}
+
+CHMethod0(void, SpringBoard, handleMenuDoubleTap)
+{
+	if (!isUninstalled) {
+		PSWViewController *vc = [PSWViewController sharedInstance];
+		if (!vc.isAnimating)
+			vc.active = !vc.active;
+		return;
+	}
+	
+    CHSuper0(SpringBoard, handleMenuDoubleTap);
+}
+// end fixme
+
+
 CHConstructor {
 	CHLoadLateClass(SBApplicationIcon);
 	CHHook0(SBApplicationIcon, launch);
@@ -65,4 +85,7 @@ CHConstructor {
 	CHHook0(SpringBoard, _handleMenuButtonEvent);
 	CHLoadLateClass(SBIconController);
 	CHHook2(SBIconController, scrollToIconListAtIndex, animate);
+	
+	CHHook0(SpringBoard, allowMenuDoubleTap);
+	CHHook0(SpringBoard, handleMenuDoubleTap);
 }
