@@ -1,6 +1,8 @@
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SBApplication.h>
+#import <SpringBoard/SBApplicationIcon.h>
 #import <SpringBoard/SBIcon.h>
 
 #ifdef USE_IOSURFACE
@@ -30,7 +32,7 @@
 
 @property (nonatomic, readonly) NSString *displayIdentifier;
 @property (nonatomic, readonly) NSString *displayName;
-@property (nonatomic, readonly) SBIcon *springBoardIcon;
+@property (nonatomic, readonly) SBApplicationIcon *springBoardIcon;
 @property (nonatomic, readonly) SBApplication *application;
 @property (nonatomic, assign) CGImageRef snapshot;
 @property (nonatomic, assign) id<PSWApplicationDelegate> delegate;

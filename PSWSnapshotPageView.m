@@ -10,36 +10,7 @@
 
 #pragma mark Private Methods
 
-- (void)_applyEmptyText
-{
-	if ([_emptyText length] != 0 && [_applications count] == 0) {
-		if (!_emptyLabel) {
-			UIFont *font = [UIFont boldSystemFontOfSize:16.0f];
-			CGFloat height = [_emptyText sizeWithFont:font].height;
-			CGRect bounds = [self bounds];
-			bounds.origin.x = 0.0f;
-			bounds.origin.y = (NSInteger)((bounds.size.height - height) / 2.0f);
-			bounds.size.height = height;
-			_emptyLabel = [[UILabel alloc] initWithFrame:bounds];
-			_emptyLabel.backgroundColor = [UIColor clearColor];
-			_emptyLabel.textAlignment = UITextAlignmentCenter;
-			_emptyLabel.font = font;
-			_emptyLabel.textColor = [UIColor whiteColor];
-			[self addSubview:_emptyLabel];
-		} else {
-			CGRect bounds = [_emptyLabel bounds];
-			bounds.origin.y = (NSInteger)(([self bounds].size.height - bounds.size.height) / 2.0f);
-			[_emptyLabel setBounds:bounds];
-		}
-		_emptyLabel.text = _emptyText;
-	} else {
-		[_emptyLabel removeFromSuperview];
-		[_emptyLabel release];
-		_emptyLabel = nil;
-	}
-}
-
-- (void)_layoutViews
+- (void)_layoutView
 {
 	CGRect frame = self.frame;
 	CGFloat pageWidth = frame.size.width - (_snapshotInset * 2);
@@ -70,7 +41,32 @@
 		pageFrame.origin.x += pageWidth;
 	}
 	
-	[self _applyEmptyText];
+	if ([_emptyText length] != 0 && [_applications count] == 0) {
+		if (!_emptyLabel) {
+			UIFont *font = [UIFont boldSystemFontOfSize:16.0f];
+			CGFloat height = [_emptyText sizeWithFont:font].height;
+			CGRect bounds = [self bounds];
+			bounds.origin.x = 0.0f;
+			bounds.origin.y = (NSInteger)((bounds.size.height - height) / 2.0f);
+			bounds.size.height = height;
+			_emptyLabel = [[UILabel alloc] initWithFrame:bounds];
+			_emptyLabel.backgroundColor = [UIColor clearColor];
+			_emptyLabel.textAlignment = UITextAlignmentCenter;
+			_emptyLabel.font = font;
+			_emptyLabel.textColor = [UIColor whiteColor];
+			[self addSubview:_emptyLabel];
+		} else {
+			CGRect bounds = [_emptyLabel bounds];
+			bounds.origin.y = (NSInteger)(([self bounds].size.height - bounds.size.height) / 2.0f);
+			[_emptyLabel setBounds:bounds];
+		}
+		_emptyLabel.text = _emptyText;
+	} else {
+		[_emptyLabel removeFromSuperview];
+		[_emptyLabel release];
+		_emptyLabel = nil;
+	}
+	
 }
 
 
@@ -109,7 +105,7 @@
 		[self setBackgroundColor:[UIColor clearColor]];
 		[self setClipsToBounds:NO];
 		
-		[self _layoutViews];
+		[self _layoutView];
 		
 	}
 	return self;
@@ -244,7 +240,7 @@
 		if (![_emptyText isEqualToString:_emptyText]) {
 			[_emptyText autorelease];
 			_emptyText = [emptyText copy];
-			[self _applyEmptyText];
+			[self _layoutView];
 		}
 	}
 }
@@ -272,7 +268,7 @@
 	if (_snapshotInset != snapshotInset) {
 		_snapshotInset = snapshotInset;
 
-		[self _layoutViews];
+		[self _layoutView];
 	}
 }
 
@@ -298,7 +294,7 @@
 		[_scrollView addSubview:snapshot];
 		[_snapshotViews addObject:snapshot];
 		[snapshot release];
-		[self _layoutViews];
+		[self _layoutView];
 	}
 }
 
@@ -324,7 +320,7 @@
 		frame.origin.y -= frame.size.height;
 		snapshot.frame = frame;
 		snapshot.alpha = 0.0f;
-		[self _layoutViews];
+		[self _layoutView];
 		[UIView commitAnimations];
 	}
 }

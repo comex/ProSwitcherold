@@ -119,12 +119,16 @@ CHDeclareClass(SBAppContextHostView);
 	
 	[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
 		
-	if (_showsTitle && !_titleView) {
+	if (_showsTitle)
+	{
 		// Move it all up a bit to make room
 		imageViewY -= 20;
-		CGRect frame = screen.frame;
-		frame.origin.y = imageViewY;
-		screen.frame = frame;
+		CGRect screenFrame = screen.frame;
+		screenFrame.origin.y = imageViewY;
+		screen.frame = screenFrame;	
+	}
+	
+	if (_showsTitle && !_titleView) {
 		closeButtonNeedsReposition = YES;
 		
 		// Prepare to add label and icon
@@ -169,7 +173,7 @@ CHDeclareClass(SBAppContextHostView);
 		[_closeButton release];
 		_closeButton = nil;
 	}
-	
+		
 	if (closeButtonNeedsReposition && _closeButton)
 	{
 		UIImage *closeImage = PSWGetCachedSpringBoardResource(@"closebox");

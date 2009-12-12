@@ -59,7 +59,7 @@ static NSInteger suppressIconScatter;
 	
 	if (!SPRINGBOARD_ACTIVE)
 	{
-		UIWindow *superview = [[self view] superview];
+		UIWindow *superview = (UIWindow *) [[self view] superview];
 		[[self view] removeFromSuperview];
 		[superview release];
 	}
@@ -201,7 +201,7 @@ static NSInteger suppressIconScatter;
 	frame.origin.x = 0.0f;
 	frame.origin.y = 0.0f;
 	frame.size.width = 320.0f;
-	frame.size.height = GetPreference(PSWShowDock, BOOL) ? 370.0f : 460.0f;
+	frame.size.height = (GetPreference(PSWShowDock, BOOL) && SPRINGBOARD_ACTIVE) ? 370.0f : 460.0f;
 	[snapshotPageView setFrame:frame];
 	
 	if (GetPreference(PSWBackgroundStyle, NSInteger) == 1)

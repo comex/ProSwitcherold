@@ -2,6 +2,10 @@
 
 #import <SpringBoard/SpringBoard.h>
 #import <CaptainHook/CaptainHook.h>
+#import <SpringBoard/SBApplication.h>
+#import <SpringBoard/SBApplicationController.h>
+#import <SpringBoard/SBApplicationIcon.h>
+#import <SpringBoard/SBIconModel.h>
 #import "SpringBoard+Backgrounder.h"
 
 #import "PSWDisplayStacks.h"
@@ -71,6 +75,7 @@ static NSString *ignoredRelaunchDisplayIdentifier;
 		[[NSFileManager defaultManager] removeItemAtPath:_snapshotFilePath error:NULL];
 		[_snapshotFilePath release];
 	}		
+	[_application release];
 	[super dealloc];
 }
 
@@ -180,7 +185,7 @@ static NSString *ignoredRelaunchDisplayIdentifier;
 }
 #endif
 
-- (SBIcon *)springBoardIcon
+- (SBApplicationIcon *)springBoardIcon
 {
 	return [CHSharedInstance(SBIconModel) iconForDisplayIdentifier:_displayIdentifier];
 }
