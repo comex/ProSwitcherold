@@ -1,8 +1,8 @@
 #import "PSWSnapshotView.h"
 
 #import <SpringBoard/SpringBoard.h>
-#import <CaptainHook/CaptainHook.h>
-#import <SpringBoard/SBIcon.h>
+#import "CaptainHook.h"
+#import <SpringBoard/SpringBoard.h>
 #import <QuartzCore/QuartzCore.h>
 #import <CoreGraphics/CoreGraphics.h>
 

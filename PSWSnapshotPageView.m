@@ -1,6 +1,6 @@
 #import "PSWSnapshotPageView.h"
 #import <QuartzCore/QuartzCore.h>
-#import <CaptainHook/CaptainHook.h>
+#import "CaptainHook.h"
 
 @implementation PSWSnapshotPageView
 @synthesize delegate = _delegate;

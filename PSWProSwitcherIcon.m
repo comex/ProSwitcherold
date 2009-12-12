@@ -1,7 +1,8 @@
 #import <UIKit/UIKit.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBAppContextHostView.h>
-#import <CaptainHook/CaptainHook.h>
+#import "CaptainHook.h"
+
 
 #import "PSWViewController.h"
 

@@ -3,7 +3,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBIconModel.h>
-#import <CaptainHook/CaptainHook.h>
+#import "CaptainHook.h"
 
 #define SPRINGBOARD_ACTIVE ![[SBWActiveDisplayStack topApplication] displayIdentifier]
 

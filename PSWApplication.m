@@ -1,11 +1,11 @@
 #import "PSWApplication.h"
 
 #import <SpringBoard/SpringBoard.h>
-#import <CaptainHook/CaptainHook.h>
-#import <SpringBoard/SBApplication.h>
-#import <SpringBoard/SBApplicationController.h>
-#import <SpringBoard/SBApplicationIcon.h>
-#import <SpringBoard/SBIconModel.h>
+#import "CaptainHook.h"
+#import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SpringBoard.h>
 #import "SpringBoard+Backgrounder.h"
 
 #import "PSWDisplayStacks.h"
