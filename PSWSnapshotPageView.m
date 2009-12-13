@@ -1,6 +1,8 @@
 #import "PSWSnapshotPageView.h"
 #import <QuartzCore/QuartzCore.h>
 #import "CaptainHook.h"
+#import "PSWDisplayStacks.h"
+#import <SpringBoard/SBUIController.h>
 
 @implementation PSWSnapshotPageView
 @synthesize delegate = _delegate;
@@ -65,6 +67,18 @@
 		[_emptyLabel removeFromSuperview];
 		[_emptyLabel release];
 		_emptyLabel = nil;
+	}
+
+	int i = 0;
+	for(PSWApplication *app in _applications) {
+		if([app application] == [SBWActiveDisplayStack topApplication]) {
+			NSLog(@"Setting focused app to %@ i=%d", app, i);
+			[_pageControl setCurrentPage:i];
+			[_scrollView setContentOffset:CGPointMake(_scrollView.bounds.size.width * i, 0.0f) animated:NO];
+
+			break;
+		}
+		i++;
 	}
 	
 }

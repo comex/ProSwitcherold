@@ -2,17 +2,20 @@
 
 #import <SpringBoard/SpringBoard.h>
 #import "CaptainHook.h"
-#import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SBUIController.h>
 #import <QuartzCore/QuartzCore.h>
 #import <CoreGraphics/CoreGraphics.h>
 
 #import "PSWApplication.h"
+#import "PSWDisplayStacks.h"
 #import "PSWResources.h"
 
 #define kSwipeThreshold 40.0f
 
 CHDeclareClass(SBIcon);
 CHDeclareClass(SBAppContextHostView);
+
+static SBAppContextHostView *_hostView = nil;
 
 @implementation PSWSnapshotView
 
@@ -92,12 +95,32 @@ CHDeclareClass(SBAppContextHostView);
 	}
 }
 
+- (void)animationDidStop:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
+	BOOL bFinished = [finished boolValue];
+	NSLog(@"Animation %@ ended (%d)", animationID, bFinished);
+	if(!bFinished || ![animationID isEqualToString:@"sizedown"]) return;
+	[_a1View setClipsToBounds:YES];
+	[_a1View setFrame:CGRectMake(0,
+								 imageViewY,
+								 snapshotWidth,
+								 snapshotHeight - imageViewY)];
+	_hostView.transform = CGAffineTransformConcat(
+												  _hostView.transform,
+												  CGAffineTransformMakeTranslation(0.0, -imageViewY));
+	[self insertSubview:_a1View atIndex:0];
+	if(!_a2View) {
+		_a2View = [[UIView alloc] initWithFrame:_hostView.frame];
+		_a2View.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.01];
+		[_a1View addSubview:_a2View];
+	}
+}
+
 - (void)_layoutView
 {
 	BOOL closeButtonNeedsReposition = NO;
 	CGImageRef snapshot = [_application snapshot];
-	CGFloat snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
-	CGFloat snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
+	snapshotWidth = (CGFloat) CGImageGetWidth(snapshot);
+	snapshotHeight = (CGFloat) CGImageGetHeight(snapshot);
 	
 	CGRect frame = [self frame];
 	CGSize box = CGSizeMake(frame.size.width - 30, frame.size.height - 70);
@@ -106,6 +129,7 @@ CHDeclareClass(SBAppContextHostView);
 	CGFloat ratioW = box.width  / img.width ;
 	CGFloat ratioH = box.height / img.height;
 	
+	
 	if (ratioW < ratioH) {
 		imageViewW = ratioW * snapshotWidth;
 		imageViewH = ratioW * snapshotHeight;
@@ -113,7 +137,7 @@ CHDeclareClass(SBAppContextHostView);
 		imageViewW = ratioH * snapshotWidth;
 		imageViewH = ratioH * snapshotHeight;
 	}
-	
+		
 	imageViewY = (frame.size.height - imageViewH) / 2.0f;
 	imageViewX = (frame.size.width - imageViewW) / 2.0f;
 	
@@ -121,7 +145,26 @@ CHDeclareClass(SBAppContextHostView);
 		imageViewY -= 20;
 	
 	[screen setFrame:CGRectMake(imageViewX, imageViewY, imageViewW, imageViewH)];
-		
+	
+	if(activeApp) {
+		CGAffineTransform transform = CGAffineTransformIdentity;
+		NSLog(@"imageViewX=%f imageViewY=%f", imageViewX, imageViewY);
+		transform = CGAffineTransformTranslate(transform, -40.0f, -20.0f);
+		_hostView.transform = transform;
+		//transform = CGAffineTransformIdentity;
+		transform = CGAffineTransformScale(transform, imageViewW/snapshotWidth, imageViewW/snapshotWidth);
+		transform = CGAffineTransformTranslate(transform, 0.0f, -20.0f);
+		[UIView beginAnimations:@"sizedown" context:NULL];  
+		[UIView setAnimationDelegate:self];
+		[_a1View setClipsToBounds:NO];
+		_a1View.frame = CGRectMake(0, 0, snapshotWidth, snapshotHeight);		
+		[UIView setAnimationDidStopSelector:@selector(animationDidStop:finished:context:)];
+		[UIView setAnimationDuration:0.5];
+		NSLog(@"Starting animation");
+		_hostView.transform = transform;
+		[UIView commitAnimations];
+	}
+	
 	if (_showsTitle && !_titleView) {
 		closeButtonNeedsReposition = YES;
 		
@@ -145,6 +188,7 @@ CHDeclareClass(SBAppContextHostView);
 		UIImage *smallIcon = [_application.springBoardIcon smallIcon];
 		_iconView = [[UIImageView alloc] initWithFrame:CGRectMake(baseX - 18, imageViewY + imageViewH + 13, 24, 24)];
 		[_iconView setImage:smallIcon];
+		NSLog(@"adding iconview");
 		[self addSubview:_iconView];
 	} else if (_titleView && !_showsTitle) {
 		[_titleView removeFromSuperview];
@@ -154,6 +198,20 @@ CHDeclareClass(SBAppContextHostView);
 		[_iconView release];
 		_iconView = nil;
 	}
+
+	
+	NSLog(@"activeApp = %x", activeApp);
+	if(activeApp) {
+		CGRect origFrame = _hostView.frame;
+		NSLog(@"The original frame was %f %f %f %f", origFrame.origin.x, origFrame.origin.y, origFrame.size.width, origFrame.size.height);
+		_a1View = [[UIView alloc] initWithFrame:CGRectMake(0, 0,
+														   snapshotWidth, snapshotHeight)];
+		//_hostView.frame = CGRectMake(0, 0, origFrame.size.width, origFrame.size.height);
+		_a1View.clipsToBounds = NO;		
+		[_a1View addSubview:_hostView];
+		[self addSubview:_a1View];	
+	}
+	
 	
 	if (!_closeButton && _showsCloseButton) {
 		_closeButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
@@ -176,6 +234,7 @@ CHDeclareClass(SBAppContextHostView);
 		CGFloat offsetY = (NSInteger)(closeImageSize.height / 2.0f);
 		[_closeButton setFrame:CGRectMake(imageViewX - offsetX, imageViewY - offsetY, closeImageSize.width, closeImageSize.height)];
 	}
+		
 }
 
 - (id)initWithFrame:(CGRect)frame application:(PSWApplication *)application
@@ -185,13 +244,21 @@ CHDeclareClass(SBAppContextHostView);
 		_application.delegate = self;
 		self.userInteractionEnabled = YES;
 		self.opaque = NO;
+		_a2View = nil;
 				
 		// Add Snapshot layer
 		screen = [UIButton buttonWithType:UIButtonTypeCustom];
 		CGImageRef snapshot = [application snapshot];
-		[screen setClipsToBounds:YES];
-		CALayer *layer = [screen layer];
-		[layer setContents:(id)snapshot];
+		[screen setClipsToBounds:NO];//YES];
+		if([application application] == [SBWActiveDisplayStack topApplication]) {
+			activeApp = YES;
+			SBUIController *uic = (SBUIController *) [NSClassFromString(@"SBUIController") sharedInstance];
+		} else {
+			activeApp = NO;
+			CALayer *layer = [screen layer];
+			[layer setContents:(id)snapshot];
+			
+		}
 		screen.hidden = NO;
 				
 		[screen addTarget:self action:@selector(snapshot:touchUpInside:) forControlEvents:UIControlEventTouchUpInside];
@@ -201,6 +268,7 @@ CHDeclareClass(SBAppContextHostView);
 		[self addSubview:screen];
 		
 		[self _layoutView];
+
 	}
     return self;
 }
@@ -261,11 +329,16 @@ CHDeclareClass(SBAppContextHostView);
 	return screen.layer.cornerRadius;	
 }
 
+
 #pragma mark PSWApplicationDelegate
 
 - (void)applicationSnapshotDidChange:(PSWApplication *)application
 {
 	[[screen layer] setContents:(id)[application snapshot]];
+}
+
++ (void)setHostView:(SBAppContextHostView *)hostView {
+	_hostView = hostView;
 }
 
 @end

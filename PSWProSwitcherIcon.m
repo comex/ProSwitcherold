@@ -43,6 +43,9 @@ static BOOL shouldSuppressIconListScroll;
 
 CHMethod0(void, SpringBoard, _handleMenuButtonEvent)
 {
+	NSLog(@"menuButton!!");
+	CHSuper0(SpringBoard, _handleMenuButtonEvent);
+	return;
 	[[PSWViewController sharedInstance] setActive:NO];
 	shouldSuppressIconListScroll = YES;
 	CHSuper0(SpringBoard, _handleMenuButtonEvent);

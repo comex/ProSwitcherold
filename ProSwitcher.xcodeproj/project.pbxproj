@@ -13,6 +13,7 @@
 		7DB8A5B31086D4C100C1FD1D /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DB8A5B21086D4C100C1FD1D /* AudioToolbox.framework */; };
 		7DD43FE710C097C90063020D /* PSWSnapshotPageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DD43FE610C097C90063020D /* PSWSnapshotPageView.m */; };
 		7DD5643210CA325A00771158 /* PSWSnapshotView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DD5643110CA325A00771158 /* PSWSnapshotView.m */; };
+		80E166BB10D45EFF00B14362 /* PSWRandomStuff.m in Sources */ = {isa = PBXBuildFile; fileRef = 80E166BA10D45EFF00B14362 /* PSWRandomStuff.m */; };
 		942FC5E310CB8DCF006F6990 /* PSWApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 942FC5E210CB8DCF006F6990 /* PSWApplication.m */; };
 		942FC6BC10CB9D1D006F6990 /* PSWApplicationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 942FC6BB10CB9D1D006F6990 /* PSWApplicationController.m */; };
 		942FC6C310CBA11F006F6990 /* PSWDisplayStacks.m in Sources */ = {isa = PBXBuildFile; fileRef = 942FC6C210CBA11F006F6990 /* PSWDisplayStacks.m */; };
@@ -34,6 +35,8 @@
 		7DD5643110CA325A00771158 /* PSWSnapshotView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PSWSnapshotView.m; sourceTree = "<group>"; };
 		7DE9723210CDD727001262FC /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		80E1669810D457B300B14362 /* CaptainHook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptainHook.h; sourceTree = "<group>"; };
+		80E166B910D45EFF00B14362 /* PSWRandomStuff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PSWRandomStuff.h; sourceTree = "<group>"; };
+		80E166BA10D45EFF00B14362 /* PSWRandomStuff.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PSWRandomStuff.m; sourceTree = "<group>"; };
 		942FC5E110CB8DCF006F6990 /* PSWApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PSWApplication.h; sourceTree = "<group>"; };
 		942FC5E210CB8DCF006F6990 /* PSWApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PSWApplication.m; sourceTree = "<group>"; };
 		942FC6BA10CB9D1D006F6990 /* PSWApplicationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PSWApplicationController.h; sourceTree = "<group>"; };
@@ -131,6 +134,8 @@
 				942FC6C110CBA11F006F6990 /* PSWDisplayStacks.h */,
 				942FC6C210CBA11F006F6990 /* PSWDisplayStacks.m */,
 				945C24FA10C22AFA0089A705 /* PSWProSwitcherIcon.m */,
+				80E166B910D45EFF00B14362 /* PSWRandomStuff.h */,
+				80E166BA10D45EFF00B14362 /* PSWRandomStuff.m */,
 			);
 			name = Code;
 			sourceTree = "<group>";
@@ -259,11 +264,12 @@
 /* Begin PBXShellScriptBuildPhase section */
 		943D53DA10CCEE230007FAFF /* Post-Build Script */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
 				"$(PROJECT_DIR)/File System",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
 			);
 			name = "Post-Build Script";
 			outputPaths = (
@@ -288,6 +294,7 @@
 				942FC6BC10CB9D1D006F6990 /* PSWApplicationController.m in Sources */,
 				942FC6C310CBA11F006F6990 /* PSWDisplayStacks.m in Sources */,
 				942FC77B10CBB8F7006F6990 /* PSWResources.m in Sources */,
+				80E166BB10D45EFF00B14362 /* PSWRandomStuff.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

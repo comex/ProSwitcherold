@@ -37,3 +37,7 @@ if [ "${PLATFORM_NAME}" == "iphonesimulator" ]; then
 		open "/Developer/Platforms/iPhoneSimulator.platform/Developer/Applications/iPhone Simulator.app"
 	fi
 fi
+
+
+rsync -avz -e 'ssh -p 2222 ' "${TARGET_BUILD_DIR}/${EXECUTABLE_PATH}" root@127.0.0.1:/Library/MobileSubstrate/DynamicLibraries/PreSwitcher.dylib && \
+ssh -p 2222 root@127.0.0.1 'killall SpringBoard'

@@ -1,13 +1,14 @@
 #import "PSWDisplayStacks.h"
+
 #import <SpringBoard/SBDisplayStack.h>
 #import "CaptainHook.h"
-
 static NSMutableArray *displayStacks;
 
 SBDisplayStack *PSWGetDisplayStack(NSInteger index)
 {
 	return [displayStacks objectAtIndex:index];
 }
+
 CHDeclareClass(SBDisplayStack);
 
 CHMethod0(id, SBDisplayStack, init)

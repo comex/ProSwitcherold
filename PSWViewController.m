@@ -80,6 +80,7 @@ static NSInteger suppressIconScatter;
 
 - (void)setActive:(BOOL)active animated:(BOOL)animated
 {
+	NSLog(@"setActive:%d current:%d", active, isActive);
 	if (active) {
 		if (isActive)
 			return;
@@ -91,19 +92,22 @@ static NSInteger suppressIconScatter;
 		snapshotPageView.focusedApplication = focusedApplication;
 		UIView *view = [self view];
 		
-		if (SPRINGBOARD_ACTIVE)
+		if (true)//SPRINGBOARD_ACTIVE)
 		{
-			UIWindow *rootWindow = [CHSharedInstance(SBUIController) window];
-			[rootWindow addSubview:view];
+			//UIWindow *rootWindow = [CHSharedInstance(SBUIController) window];
+			//[rootWindow addSubview:view];
+			UIView *pv = [CHSharedInstance(SBUIController) contentView];
+			NSLog(@"The view is %@", pv);
+			[pv addSubview:view];
 			
 			// Find appropriate superview and add as subview
-			UIView *buttonBar = [CHSharedInstance(SBIconModel) buttonBar];
+			/*UIView *buttonBar = [CHSharedInstance(SBIconModel) buttonBar];
 			UIView *buttonBarParent = [buttonBar superview];
 			UIView *superview = [buttonBarParent superview];
 			if (GetPreference(PSWShowDock, BOOL))
 				[superview insertSubview:view belowSubview:buttonBarParent];
 			else
-				[superview insertSubview:view aboveSubview:buttonBarParent];
+				[superview insertSubview:view aboveSubview:buttonBarParent];*/
 		}
 		else
 		{
@@ -131,6 +135,9 @@ static NSInteger suppressIconScatter;
 		if (!isActive)
 			return;
 		isActive = NO;
+		
+		extern int doingStuffMode;
+		doingStuffMode = 0;
 		
 		[focusedApplication release];
 		focusedApplication = [snapshotPageView.focusedApplication retain];
